@@ -43,7 +43,7 @@ class SequenceCommand(object):
         if i == 0:
             return ""
         else:
-            return f"wait({int(i)});\n"
+            return f"playZero({round(int(i)/16)*16});\nwaitWave();\n"
 
     @staticmethod
     def wait_wave():

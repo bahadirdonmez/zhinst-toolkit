@@ -121,12 +121,9 @@ class Sequence(object):
             self.trigger_cmd_2 = SequenceCommand.comment_line()
             self.dead_cycles = 0
 
-    def time_to_cycles(self, time, wait_time=True):
+    def time_to_cycles(self, time):
         """Helper method to convert time to FPGA clock cycles."""
-        if wait_time:
-            return int(time * self.clock_rate / 8)
-        else:
-            return int(time * self.clock_rate)
+        return int(time * self.clock_rate)
 
     def get_gauss_params(self, width, truncation):
         """Calculates the attribute `gauss_params` from width and truncation.
@@ -138,10 +135,10 @@ class Sequence(object):
         
         """
         gauss_length = (
-            self.time_to_cycles(2 * truncation * width, wait_time=False) // 16 * 16
+            self.time_to_cycles(2 * truncation * width) // 16 * 16
         )
         gauss_pos = int(gauss_length / 2)
-        gauss_width = self.time_to_cycles(width, wait_time=False)
+        gauss_width = self.time_to_cycles(width)
         self.gauss_params = [gauss_length, gauss_pos, gauss_width]
 
     def check_attributes(self):
@@ -210,7 +207,7 @@ class SimpleSequence(Sequence):
             if self.alignment == Alignment.START_WITH_TRIGGER:
                 temp = self.wait_cycles
             elif self.alignment == Alignment.END_WITH_TRIGGER:
-                temp = self.wait_cycles - self.buffer_lengths[i] / 8
+                temp = self.wait_cycles - self.buffer_lengths[i]
             self.sequence += SequenceCommand.wait(
                 temp - self.time_to_cycles(self.delay_times[i])
             )
@@ -221,7 +218,7 @@ class SimpleSequence(Sequence):
             self.sequence += SequenceCommand.wait_wave()
             if self.trigger_mode == TriggerMode.SEND_TRIGGER:
                 if self.alignment == Alignment.START_WITH_TRIGGER:
-                    temp = self.dead_cycles - self.buffer_lengths[i] / 8
+                    temp = self.dead_cycles - self.buffer_lengths[i]
                 elif self.alignment == Alignment.END_WITH_TRIGGER:
                     temp = self.dead_cycles
             else:
@@ -588,7 +585,7 @@ class ReadoutSequence(Sequence):
 
     def write_sequence(self):
         self.sequence = SequenceCommand.header_comment(sequence_type="Readout")
-        length = self.time_to_cycles(self.readout_length, wait_time=False) // 16 * 16
+        length = self.time_to_cycles(self.readout_length) // 16 * 16
         self.sequence += SequenceCommand.init_readout_pulse(
             length,
             self.readout_amplitudes,
@@ -675,7 +672,7 @@ class PulsedSpectroscopySequence(Sequence):
         self.sequence = SequenceCommand.header_comment(
             sequence_type="Pulsed Spectroscopy"
         )
-        length = self.time_to_cycles(self.pulse_length, wait_time=False) // 16 * 16
+        length = self.time_to_cycles(self.pulse_length) // 16 * 16
         self.sequence += SequenceCommand.init_ones(self.pulse_amplitude, length)
         self.sequence += SequenceCommand.repeat(self.repetitions)
         self.sequence += self.trigger_cmd_1
