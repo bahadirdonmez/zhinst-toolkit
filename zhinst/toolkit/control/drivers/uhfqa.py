@@ -242,6 +242,13 @@ class UHFQA(BaseInstrument):
         self._set("qas/0/result/reset", 0)
         self._set("qas/0/result/reset", 1)
 
+    def factory_reset(self):
+        """Load the factory default settings."""
+        self._set(f"/system/preset/load", 1)
+        print(
+        f"Factory preset is loaded to device {self.serial.upper()}."
+        )
+        
     def _init_settings(self):
         settings = [
             ("awgs/0/single", 1),
